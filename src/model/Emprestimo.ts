@@ -1,3 +1,4 @@
+import { kMaxLength } from "buffer";
 import { DataBaseModel } from "./DataBaseModel";
 
 // Recupera conexão com o banco de dados
@@ -13,7 +14,7 @@ export class Emprestimo{
     private dataEmprestimo: Date; // Data do empréstimo
     private dataDevolucao: Date; // Data da devolução do livro
     private statusEmprestimo: string; // Status do empréstimo
-
+    private statusEmprestimoRegistro: boolean = true; // Controla o status do emprestimo
      /**
      * Construtor da classe Emprestimos
      * 
@@ -136,6 +137,24 @@ export class Emprestimo{
         this.statusEmprestimo = _statusEmprestimo;
     }
 
+    /**
+     * Retorna o staus do aluno no sistema 
+     * 
+     * @returns status do aluno no sistema
+     */
+    public getStatusEmprestimoRegistro(): boolean {
+        return this.statusEmprestimoRegistro;
+    }
+
+    /**
+     * Atribui um valor ao status do aluno
+     * 
+     * @param _statusAluno : valor a ser atribuido ao status do aluno
+     */
+    public setStatusEmprestimoRegistro(_statusEmprestimoRegistro: boolean) {
+        this.statusEmprestimoRegistro = _statusEmprestimoRegistro;
+    }
+
     // MÉTODO PARA ACESSAR O BANCO DE DADOS
     // CRUD Create - READ - Update - Delete
 
@@ -152,12 +171,13 @@ export class Emprestimo{
             // Query para consulta no banco de dados
             const querySelectEmprestimo = `
                 SELECT e.id_emprestimo, e.id_aluno, e.id_livro,
-                       e.data_emprestimo, e.data_devolucao, e.status_emprestimo,
+                       e.data_emprestimo, e.data_devolucao, e.status_emprestimo, e.status_emprestimo_registro,
                        a.ra, a.nome, a.sobrenome, a.celular, 
                        l.titulo, l.autor, l.editora
                 FROM Emprestimo e
                 JOIN Aluno a ON e.id_aluno = a.id_aluno
-                JOIN Livro l ON e.id_livro = l.id_livro;
+                JOIN Livro l ON e.id_livro = l.id_livro
+                WHERE status_emprestimo_registro = true;
             `;
     
             // Executa a query no banco de dados
@@ -178,6 +198,7 @@ export class Emprestimo{
                     dataEmprestimo: linha.data_emprestimo,
                     dataDevolucao: linha.data_devolucao,
                     statusEmprestimo: linha.status_emprestimo,
+                    statusEmprestimoRegistro: linha.status_emprestimo_registro,
                     aluno: {
                         ra: linha.ra,
                         nome: linha.nome,
@@ -294,6 +315,46 @@ export class Emprestimo{
             }
 
             return resultado.rows[0].id_emprestimo; // Retorna o ID do empréstimo atualizado
+        // captura qualquer erro que possa acontecer
+        } catch (error) {
+            // exibe detalhes do erro no console
+            console.error(`Erro ao atualizar empréstimo: ${error}`);
+            // lança um novo erro
+            throw new Error('Erro ao atualizar o empréstimo.');
+        }
+    }
+
+    /**
+     * Deleta os dados de um empréstimo existente no banco de dados
+     * 
+     * @param idEmprestimo : number
+     * @param idAluno : number'
+     * @param idLivro : number
+     * @param dataEmprestimo : Date
+     * @param dataDevolucao : Date
+     * @param statusEmprestimo : string
+     * @returns Promise com o resultado da atualização ou erro
+     */
+    static async removerEmprestimo(idEmprestimo: number): Promise<any> {
+        let queryResult = false;
+        try {
+            // Cria a consulta (query) para deletar um empréstimo
+            const queryUpdateEmprestimo = `UPDATE Emprestimo
+                                               SET status_emprestimo_registro = FALSE
+                                                WHERE id_emprestimo =${idEmprestimo}`;
+
+            // executa a consulta e armazena o resultado
+            const resultado = await database.query(queryUpdateEmprestimo);
+
+            // verifica se o empréstimo não existe
+            if (resultado.rowCount === 0) {
+                // lança um novo erro
+                throw new Error('Empréstimo não encontrado.');
+            }
+
+            queryResult = true;
+
+            return queryResult; // Retorna o ID do empréstimo atualizado
         // captura qualquer erro que possa acontecer
         } catch (error) {
             // exibe detalhes do erro no console

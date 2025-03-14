@@ -6,6 +6,7 @@ import { Request,Response } from "express";
  * Define os atributos que devem ser recebidos do cliente nas requisições
  */
 interface EmprestimoDTO {
+    idEmprestimo?: number,
     idAluno: number;
     idLivro: number;
     dataEmprestimo: string;
@@ -89,6 +90,29 @@ class EmprestimoController extends Emprestimo{
         } catch (error) {
             console.error('Erro ao atualizar empréstimo:', error);
             return res.status(500).json({ message: 'Erro ao atualizar o empréstimo.' });
+        }
+    }
+
+    /**
+    * Remove um emprestimo.
+    * @param req Objeto de requisição HTTP com o ID do emprestimo a ser removido.
+    * @param res Objeto de resposta HTTP.
+    * @returns Mensagem de sucesso ou erro em formato JSON.
+    */
+    static async remover(req: Request, res: Response): Promise<Response> {
+        try {
+            const idEmprestimo= parseInt(req.query.idEmprestimo as string);
+            const result = await Emprestimo.removerEmprestimo(idEmprestimo);
+                
+            if (result) {
+                return res.status(200).json('Emprestimo removido com sucesso');
+            } else {
+                return res.status(401).json('Erro ao deletar Emprestimo');
+            }
+        } catch (error) {
+            console.log("Erro ao remover o Emprestimo");
+            console.log(error);
+            return res.status(500).send("error");
         }
     }
 }
