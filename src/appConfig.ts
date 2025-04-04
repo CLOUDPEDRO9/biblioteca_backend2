@@ -1,4 +1,7 @@
 const SERVER_ROUTES = {
+
+    LOGIN: '/login',
+
     NOVO_ALUNO: '/novo/aluno',
     ATUALIZAR_ALUNO: '/atualiza/aluno',
     REMOVER_ALUNO: '/remove/aluno',
